@@ -47,7 +47,7 @@ const upload = multer({
   }
 });
 
-// Database initialization - Create tables if they don't exist
+//Initialize all database tables
 async function initializeDatabase() {
   try {
     // Users table
@@ -65,8 +65,8 @@ async function initializeDatabase() {
           mobile_number IS NULL OR 
           (char_length(mobile_number) = 10 AND mobile_number ~ '^[0-9]+$')
         )
-      )
-    `);
+      )
+    `);
 
     // Campaigns table
     await pool.query(`
@@ -101,7 +101,7 @@ async function initializeDatabase() {
   }
 }
 
-// Initialize database 
+//Call the database initializer at startup
 initializeDatabase();
 
 //Signup Route
