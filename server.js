@@ -50,6 +50,24 @@ const upload = multer({
 // Database initialization - Create tables if they don't exist
 async function initializeDatabase() {
   try {
+    // Users table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id UUID PRIMARY KEY,
+        full_name TEXT,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        user_type TEXT NOT NULL,
+        account_type TEXT NOT NULL,
+        mobile_number VARCHAR(15),
+        ngo_id VARCHAR(100),
+        CONSTRAINT chk_mobile_length CHECK (
+          mobile_number IS NULL OR 
+          (char_length(mobile_number) = 10 AND mobile_number ~ '^[0-9]+$')
+        )
+      )
+    `);
+
     // Campaigns table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS campaigns (
