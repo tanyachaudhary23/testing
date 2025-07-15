@@ -51,22 +51,29 @@ const upload = multer({
 async function initializeDatabase() {
   try {
     // Users table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id UUID PRIMARY KEY,
-        full_name TEXT,
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        user_type TEXT NOT NULL,
-        account_type TEXT NOT NULL,
-        mobile_number VARCHAR(15),
-        ngo_id VARCHAR(100),
-        CONSTRAINT chk_mobile_length CHECK (
-          mobile_number IS NULL OR 
-          (char_length(mobile_number) = 10 AND mobile_number ~ '^[0-9]+$')
-        )
-      )
-    `);
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS users (
+            id UUID PRIMARY KEY,
+            full_name TEXT,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            user_type TEXT NOT NULL,
+            account_type TEXT,
+            mobile_number VARCHAR(15),
+            ngo_id VARCHAR(100),
+            dob DATE,
+            address TEXT,
+            city TEXT,
+            pincode VARCHAR(10),
+            country TEXT,
+            occupation TEXT,
+            CONSTRAINT chk_mobile_length CHECK (
+              mobile_number IS NULL OR 
+              (char_length(mobile_number) = 10 AND mobile_number ~ '^[0-9]+$')
+            )
+          )
+        `);
+
 
     // Campaigns table
     await pool.query(`
@@ -108,12 +115,19 @@ initializeDatabase();
 app.post('/signup', async (req, res) => {
   const {
     full_name,
+    mobile_number,
     email,
     password,
+    dob,
+    address,
+    city,
+    pincode,
+    country,
+    occupation,
     user_type,      // 'campaign_owner' or 'user'
     account_type,   // 'individual' or 'organization'
     ngo_id,
-    mobile_number
+    
   } = req.body;
 
   try {
@@ -128,17 +142,23 @@ app.post('/signup', async (req, res) => {
     // Insert into users table
     await pool.query(
       `INSERT INTO users 
-        (id, full_name, email, password_hash, user_type, account_type, mobile_number, ngo_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        (id, full_name, email, password_hash, user_type, account_type, mobile_number, ngo_id, dob, address, city, pincode, country, occupation)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
       [
         id,
-        full_name || null,
+        full_name,
         email,
         password_hash,
         user_type,
-        account_type,
+        user_type === 'user' ? null : account_type ,
         mobile_number || null,                                
-        account_type === 'organization' ? ngo_id : null        
+        account_type === 'organization' ? ngo_id : null ,
+        user_type === 'user' ? dob : null ,
+        address,
+        user_type === 'user' ? null : city ,
+        user_type === 'user' ? null : pincode ,
+        user_type === 'user' ? null : country ,
+        user_type === 'user' ? occupation : null ,     
       ]
     );
 
